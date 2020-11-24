@@ -1,0 +1,401 @@
+<html>
+
+<head>
+    <script src="web3.min.js"></script>
+</head>
+
+<body>
+    <input type="button" value="Allow" onclick="javascript: approveTx();" />
+    <input type="button" value="Withdraw" onclick="javascript: withdrawTest();" />
+
+    <script>
+        (async () => {
+            await window.ethereum.enable();
+            const PeetPayContract = '0xaD7A177296DCF8b9e3B220aDAD5074F64f3A5D86';
+            const WETHContractAddr = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
+            const wetheabi = [
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "name",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "string"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "name": "_spender",
+                            "type": "address"
+                        },
+                        {
+                            "name": "_value",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "approve",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "totalSupply",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "name": "_from",
+                            "type": "address"
+                        },
+                        {
+                            "name": "_to",
+                            "type": "address"
+                        },
+                        {
+                            "name": "_value",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "transferFrom",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "decimals",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "uint8"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [
+                        {
+                            "name": "_owner",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "balanceOf",
+                    "outputs": [
+                        {
+                            "name": "balance",
+                            "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "symbol",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "string"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "name": "_to",
+                            "type": "address"
+                        },
+                        {
+                            "name": "_value",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "transfer",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [
+                        {
+                            "name": "_owner",
+                            "type": "address"
+                        },
+                        {
+                            "name": "_spender",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "allowance",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "payable": true,
+                    "stateMutability": "payable",
+                    "type": "fallback"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "name": "owner",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": true,
+                            "name": "spender",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": false,
+                            "name": "value",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "Approval",
+                    "type": "event"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "name": "from",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": true,
+                            "name": "to",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": false,
+                            "name": "value",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "Transfer",
+                    "type": "event"
+                }
+            ];
+            const web3 = new Web3(window.ethereum);
+            const wethContract = web3.eth.contract(wetheabi);
+            const peetPayContract = web3.eth.contract([
+                {
+                    "inputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "constructor"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "_from",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "deposit",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "_value",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "currentBonus",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "PriceEstimated",
+                    "type": "event"
+                },
+                {
+                    "inputs": [],
+                    "name": "uniswapRouter",
+                    "outputs": [
+                        {
+                            "internalType": "contract IUniswapV2Router02",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "withdrawWallet",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "withdraw",
+                    "outputs": [],
+                    "stateMutability": "payable",
+                    "type": "function",
+                    "payable": true
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "withdrawWallet",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "tokenAddr",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "withdrawSpecificToken",
+                    "outputs": [],
+                    "stateMutability": "payable",
+                    "type": "function",
+                    "payable": true
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "_amount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "transferToken",
+                    "outputs": [],
+                    "stateMutability": "payable",
+                    "type": "function",
+                    "payable": true
+                },
+                {
+                    "inputs": [],
+                    "name": "getCurrentSaleBonus",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "bonusPercent",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function",
+                    "constant": true
+                }
+            ]);
+
+            const approveTx = async () => {
+                const tokenContractInstance = wethContract.at(WETHContractAddr);
+
+                console.log(tokenContractInstance.events);
+
+                web3.eth.getAccounts(async (error, accounts) => {
+
+                    // Send ERC20 transaction with web3
+                    console.log(tokenContractInstance.functions);
+                    var amount = web3.toWei(0.02, "ether")
+                    tokenContractInstance.approve(PeetPayContract, amount, () => {
+                        testPaypeet();
+                    });
+                    //tokenContractInstance.approve()
+                });
+            };
+            window.approveTx = approveTx;
+
+            const testPaypeet = async () => {
+                const peetPayContractInstance = peetPayContract.at(PeetPayContract);
+                console.log(peetPayContract);
+
+                var amount = web3.toWei(0.02, "ether")
+                peetPayContractInstance.transferToken(amount, (err, res) => {
+                    console.log(err);
+                    console.log(res);
+                });
+            }
+            window.testPaypeet = testPaypeet;
+
+            const withdrawTest = async () => {
+                const peetPayContractInstance = peetPayContract.at(PeetPayContract);
+                web3.eth.getAccounts(async (error, accounts) => {
+                    peetPayContractInstance.withdraw(accounts[0], (err, res) => { });
+                });
+            }
+            window.withdrawTest = withdrawTest;
+
+            window.onload = async () => {
+
+
+            }
+        })();
+
+    </script>
+</body>
+
+</html>
