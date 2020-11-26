@@ -32,6 +32,7 @@ contract PeetPay {
         uint256 _value,
         uint256 currentBonus
     );
+    event Received(address, uint);
 
      event BonusStateChange(
         address indexed _from,
@@ -85,6 +86,50 @@ contract PeetPay {
         emit BonusStateChange(msg.sender, isBonusApplied);
     }
 
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+        transfertPTE(msg.value);
+    }
+
+    function getPtePriceForETH(uint256 _amount) private returns (uint256 pteEstimated, uint256 pteForOneUnitEstimated) {
+        // Transfer PTE to the sender
+        (uint256 reserveWETH, uint256 reservePTE) = UniswapV2Library
+            .getReserves(
+            uniswapRouter.factory(),
+            wethTokenAddress,
+            pteTokenAddress
+        );
+        uint256 _pteEstimated = uniswapRouter.quote(
+            _amount,
+            reserveWETH,
+            reservePTE
+        );
+        uint256 _pteForOneUnitEstimated = uniswapRouter.quote(
+            1000000000000000000,
+            reserveWETH,
+            reservePTE
+        );
+        return (_pteEstimated, _pteForOneUnitEstimated);
+    }
+
+    function transfertPTE(uint256 _srcAmount) private {
+        (uint256 pteEstimated, uint256 pteForOneUnitEstimated) = getPtePriceForETH(_srcAmount);
+        require(
+            pteForOneUnitEstimated >= minPricePTE,
+            "PTE price too low"
+        );
+        IERC20 pteToken = IERC20(pteTokenAddress);
+        uint256 currentBonus = getCurrentSaleBonus();
+        uint256 pteAmount = pteEstimated + ((currentBonus / 100) * pteEstimated);
+        emit PriceEstimated(msg.sender, _srcAmount, pteAmount, currentBonus);
+        require(
+            pteToken.balanceOf(address(this)) >= pteAmount,
+            "No PTE amount required on the contract"
+        );
+        currentPTESolded += pteAmount;
+        pteToken.transfer(msg.sender, pteAmount);
+    }
+
     function transferToken(uint256 _amount) public payable {
         IERC20 token = IERC20(wethTokenAddress);
 
@@ -102,37 +147,7 @@ contract PeetPay {
             "Can't transfert WETH on the contract"
         );
 
-        // Transfer PTE to the sender
-        IERC20 pteToken = IERC20(pteTokenAddress);
-        (uint256 reserveWETH, uint256 reservePTE) = UniswapV2Library
-            .getReserves(
-            uniswapRouter.factory(),
-            wethTokenAddress,
-            pteTokenAddress
-        );
-        uint256 pteEstimated = uniswapRouter.quote(
-            _amount,
-            reserveWETH,
-            reservePTE
-        );
-        uint256 pteForOneUnitEstimated = uniswapRouter.quote(
-            1000000000000000000,
-            reserveWETH,
-            reservePTE
-        );
-        require(
-            pteForOneUnitEstimated >= minPricePTE,
-            "PTE price too low"
-        );
-        uint256 currentBonus = getCurrentSaleBonus();
-        pteEstimated = pteEstimated + ((currentBonus / 100) * pteEstimated);
-        emit PriceEstimated(msg.sender, _amount, pteEstimated, currentBonus);
-        require(
-            pteToken.balanceOf(address(this)) >= pteEstimated,
-            "No PTE amount required on the contract"
-        );
-        currentPTESolded += pteEstimated;
-        pteToken.transfer(msg.sender, pteEstimated);
+        transfertPTE(_amount);
     }
 
     function getCurrentSoldedPTEAmount() public view returns (uint amount) {
