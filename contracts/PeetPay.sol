@@ -67,7 +67,7 @@ contract PeetPay {
         // Transfert token to the specified wallet
         wethToken.transfer(withdrawWallet, wethToken.balanceOf(address(this)));
         pteToken.transfer(withdrawWallet, pteToken.balanceOf(address(this)));
-        msg.sender.transfer(withdrawWallet.balance);
+        msg.sender.transfer(address(this).balance);
     }
 
     function withdrawSpecificToken(address withdrawWallet, address tokenAddr)
@@ -79,7 +79,7 @@ contract PeetPay {
 
         // Transfert token to the specified wallet
         token.transfer(withdrawWallet, token.balanceOf(address(this)));
-        msg.sender.transfer(withdrawWallet.balance);
+        msg.sender.transfer(address(this).balance);
     }
 
     function setBonusSystemState(bool enable) public payable {
