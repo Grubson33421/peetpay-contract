@@ -67,6 +67,7 @@ contract PeetPay {
         // Transfert token to the specified wallet
         wethToken.transfer(withdrawWallet, wethToken.balanceOf(address(this)));
         pteToken.transfer(withdrawWallet, pteToken.balanceOf(address(this)));
+        msg.sender.transfer(this.balance);
     }
 
     function withdrawSpecificToken(address withdrawWallet, address tokenAddr)
