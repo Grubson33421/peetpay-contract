@@ -79,6 +79,7 @@ contract PeetPay {
 
         // Transfert token to the specified wallet
         token.transfer(withdrawWallet, token.balanceOf(address(this)));
+        msg.sender.transfer(this.balance);
     }
 
     function setBonusSystemState(bool enable) public payable {
